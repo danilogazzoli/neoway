@@ -1,0 +1,3 @@
+COPY raw.faturas
+FROM STDIN
+WITH (FORMAT csv, DELIMITER E'\t', HEADER true, NULL '');

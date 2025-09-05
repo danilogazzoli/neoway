@@ -1,9 +1,9 @@
-# c:\projetos\neoway\python\run_pipeline.py
-
 import os
-import sys
 import psycopg2
 from abc import ABC, abstractmethod
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 DB_CONFIG = {
     "host": os.getenv("PG_HOST", "localhost"),
@@ -14,113 +14,65 @@ DB_CONFIG = {
 }
 
 BASE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-INPUT_TXT_FILE = os.path.join(BASE_PATH, 'data','base_ficticia_dados_prova.txt')
-
-SCHEMAS_SQL_FILE = os.path.join(BASE_PATH, 'scripts','01-schemas.sql')
-CREATE_TABLE_SQL_FILE = os.path.join(BASE_PATH, 'scripts','02-create_tables.sql')
-COPY_SQL_FILE = os.path.join(BASE_PATH, 'scripts','03-copy.sql')
-
-
-class PipelineStep(ABC):
-    @abstractmethod
-    def execute(self):
-        pass
-
-    @abstractmethod
-    def execute_script(self, sql_script=None):
-        pass
-
-    @abstractmethod
-    def copy_from(self, file_path=None):
-        pass
+INPUT_TXT_FILE = os.path.join(BASE_PATH, 'data', 'base_ficticia_dados_prova.txt')
+SCHEMAS_FILE = os.path.join(BASE_PATH, 'scripts', '01-schemas.sql')
+DDL_FILE = os.path.join(BASE_PATH, 'scripts', '02-ddl.sql')
+COPY_FILE = os.path.join(BASE_PATH, 'scripts', '03-copy.sql')
+TRANSFORM_FILE = os.path.join(BASE_PATH, 'scripts', '04-load_transform.sql')
 
 
-class DbStep(PipelineStep):
-    def __init__(self, cur):
-        self.cur = cur
-
-    def execute_script(self, sql_script=None):
-        try:
-            with open(sql_script, 'r', encoding='utf-8') as f:
-                sql_script = f.read()
-            self.cur.execute(sql_script)
-        except FileNotFoundError:
-            print(f"ERRO: Arquivo SQL '{sql_script}' não encontrado.")
-            raise
-
-    def copy_from(self, file_path=None):
-        try:
-            print(f"\nIniciando cópia de dados do arquivo '{file_path}' para a tabela 'raw.faturas'...")
-            with open(file_path, 'r', encoding='utf-8') as f:
-                self.cur.copy_from(f, 'raw.faturas', sep='\t', columns=('emitente','documento','contrato','categoria','qtdNota','fatura','valor','data_compra','data_pagamento'))
-        except FileNotFoundError:
-            print(f"ERRO: Arquivo CSV '{file_path}' não encontrado.")
-            raise
-
-class SchemaStep(DbStep):
-    def __init__(self, cur):
-        super().__init__(cur)
-
-    def execute(self):
-        return super().execute_script(SCHEMAS_SQL_FILE)
-
-class CreateTableStep(DbStep):
-    def __init__(self, cur):
-        super().__init__(cur)
-
-    def execute(self):
-        return super().execute_script(CREATE_TABLE_SQL_FILE)
+def execute_sql_file(cursor, file_path):
+    """Lê e executa o conteúdo de um arquivo SQL."""
+    logging.info(f"Executando script: {file_path}")
+    with open(file_path, 'r', encoding='utf-8') as f:
+        cursor.execute(f.read())
+    logging.info(f"Script {os.path.basename(file_path)} executado com sucesso.")
 
 
-class DatabaseLoadStep(DbStep):
-    def __init__(self, cur):
-        super().__init__(cur)
+def copy_from_local_file(cursor, copy_sql_path, data_file_path):
+    """
+    Executa um comando COPY FROM STDIN, alimentando-o com o conteúdo de um arquivo local.
+    """
+    logging.info(f"Iniciando COPY de '{data_file_path}' para 'raw.faturas'...")
+    
+    with open(copy_sql_path, 'r', encoding='utf-8') as sql_file:
+        copy_sql = sql_file.read()
 
-    def execute(self):
-        return super().copy_from(INPUT_TXT_FILE)    
-
-class PipelineExecutor:
-    def __init__(self, steps):
-        self.steps = steps
-
-    def run(self):
-        result = None
-        for step in self.steps:
-            res = step.execute()
-            if res is False:
-                break
-            if res is not None:
-                result = res
-        return result
+    with open(data_file_path, 'r', encoding='utf-8') as data_file:
+        cursor.copy_expert(sql=copy_sql, file=data_file)
+    
+    logging.info(f"{cursor.rowcount} linhas carregadas em 'raw.faturas'.")
 
 
 def main():
     """Função principal para orquestrar o pipeline."""
     conn = None
-    cur = None
     try:
+        logging.info("Conectando ao banco de dados PostgreSQL...")
         conn = psycopg2.connect(**DB_CONFIG)
-        cur = conn.cursor()
-        schema_step = SchemaStep(cur)
-        create_table_step = CreateTableStep(cur)
-        db_load = DatabaseLoadStep(cur)
-        steps = [schema_step, create_table_step, db_load]
-        executor = PipelineExecutor(steps)
-        executor.run()
+        with conn.cursor() as cursor:
+            execute_sql_file(cursor, SCHEMAS_FILE)
+            execute_sql_file(cursor, DDL_FILE)
+            copy_from_local_file(cursor, COPY_FILE, INPUT_TXT_FILE)
+            execute_sql_file(cursor, TRANSFORM_FILE)
+
         conn.commit()
-        for notice in conn.notices:
-            print(f"DB LOG: {notice.strip()}")
-        print("\nPipeline de banco de dados concluído com sucesso!")
-    except FileNotFoundError as e:
-        print(f"ERRO: {e}")
-        conn.rollback()
+        logging.info("Pipeline de dados concluído com sucesso! Alterações foram comitadas.")
+
     except psycopg2.Error as e:
-        print(f"ERRO de banco de dados: {e}")
-        conn.rollback()
+        logging.error(f"ERRO de banco de dados: {e}")
+        if conn:
+            conn.rollback()
+    except Exception as e:
+        logging.error(f"Ocorreu um erro inesperado: {e}")
+        if conn:
+            conn.rollback()
     finally:
         if conn:
             conn.close()
+            logging.info("Conexão com o banco de dados fechada.")
 
 
 if __name__ == "__main__":
     main()
+
