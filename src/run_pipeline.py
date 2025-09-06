@@ -21,11 +21,16 @@ COPY_FILE = os.path.join(BASE_PATH, 'scripts', '03-copy.sql')
 TRANSFORM_FILE = os.path.join(BASE_PATH, 'scripts', '04-load_transform.sql')
 
 
+def open_script(file_script):
+    """Abre um arquivo de script SQL e retorna seu conteúdo."""
+    with open(file_script, 'r', encoding='utf-8') as f:
+        return f.read()
+    return None    
+
 def execute_sql_file(cursor, file_path):
     """Lê e executa o conteúdo de um arquivo SQL."""
     logging.info(f"Executando script: {file_path}")
-    with open(file_path, 'r', encoding='utf-8') as f:
-        cursor.execute(f.read())
+    cursor.execute(open_script(file_path))
     logging.info(f"Script {os.path.basename(file_path)} executado com sucesso.")
 
 
@@ -35,11 +40,10 @@ def copy_from_local_file(cursor, copy_sql_path, data_file_path):
     """
     logging.info(f"Iniciando COPY de '{data_file_path}' para 'raw.faturas'...")
     
-    with open(copy_sql_path, 'r', encoding='utf-8') as sql_file:
-        copy_sql = sql_file.read()
+    sql = open_script(copy_sql_path)
 
     with open(data_file_path, 'r', encoding='utf-8') as data_file:
-        cursor.copy_expert(sql=copy_sql, file=data_file)
+        cursor.copy_expert(sql=sql, file=data_file)
     
     logging.info(f"{cursor.rowcount} linhas carregadas em 'raw.faturas'.")
 
