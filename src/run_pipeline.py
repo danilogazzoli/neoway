@@ -38,14 +38,14 @@ def copy_from_local_file(cursor, copy_sql_path, data_file_path):
     """
     Executa um comando COPY FROM STDIN, alimentando-o com o conteúdo de um arquivo local.
     """
-    logging.info(f"Iniciando COPY de '{data_file_path}' para 'raw.faturas'...")
+    logging.info(f"Iniciando COPY de '{data_file_path}' para 'raw.transacao'...")
     
     sql = open_script(copy_sql_path)
 
     with open(data_file_path, 'r', encoding='utf-8') as data_file:
         cursor.copy_expert(sql=sql, file=data_file)
     
-    logging.info(f"{cursor.rowcount} linhas carregadas em 'raw.faturas'.")
+    logging.info(f"{cursor.rowcount} linhas carregadas em 'raw.transacao'.")
 
 
 def main():

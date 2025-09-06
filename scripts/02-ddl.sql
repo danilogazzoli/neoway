@@ -3,9 +3,9 @@
 --=============================================================================
 
 -- Garante que a tabela seja recriada do zero se o script for executado novamente.
-DROP TABLE IF EXISTS raw.faturas CASCADE;
+DROP TABLE IF EXISTS raw.transacao CASCADE;
 
-CREATE TABLE IF NOT EXISTS raw.faturas (
+CREATE TABLE IF NOT EXISTS raw.transacao (
     emitente TEXT,
     documento TEXT,
     contrato TEXT,
@@ -17,11 +17,11 @@ CREATE TABLE IF NOT EXISTS raw.faturas (
     data_pagamento TEXT
 );
 
-COMMENT ON TABLE raw.faturas IS 'Tabela de ingestão bruta (landing zone) dos dados de faturas.';
+COMMENT ON TABLE raw.transacao IS 'Tabela de ingestão bruta (landing zone) dos dados de transações.';
 
 DO $$
 BEGIN
-  RAISE NOTICE 'Tabela raw.faturas criada com sucesso.';
+  RAISE NOTICE 'Tabela raw.transacao criada com sucesso.';
 END
 $$;
 
@@ -55,6 +55,9 @@ $$;
 -- CAMADA APP: Transformação dos dados e modelagem Dimensional
 --=============================================================================
 DROP TABLE IF EXISTS app.transacao CASCADE;
+DROP TABLE IF EXISTS app.emitente CASCADE;
+DROP TABLE IF EXISTS app.documento CASCADE;
+DROP TABLE IF EXISTS app.categoria CASCADE;
 
 -- Dimensão Categoria
 CREATE TABLE IF NOT EXISTS app.categoria (
@@ -65,7 +68,7 @@ CREATE TABLE IF NOT EXISTS app.categoria (
 -- Dimensão Emitente
 CREATE TABLE IF NOT EXISTS app.emitente (
     id_emitente SERIAL PRIMARY KEY,
-    emitente_original VARCHAR(200) UNIQUE NOT NULL
+    emitente VARCHAR(200) UNIQUE NOT NULL
 );
 
 -- Dimensão Documento

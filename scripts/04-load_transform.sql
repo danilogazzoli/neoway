@@ -21,7 +21,7 @@ INSERT INTO context.transacoes (
     data_pagamento
 )
 SELECT
-    emitente,
+    UPPER(UNACCENT(TRIM(emitente))) as emitente,
 
     documento,
     CASE
@@ -39,7 +39,7 @@ SELECT
         ELSE 'INVALIDO'
     END AS qualidade_documento,
     contrato,
-    categoria,
+    UPPER(UNACCENT(TRIM(categoria))) as categoria,
  
     -- Tratamento para converter 'qtdNota' para inteiro de forma segura
     CASE
@@ -52,11 +52,11 @@ SELECT
     TO_DATE(NULLIF(TRIM(REPLACE(data_compra, '-', '/')), ''), 'DD/MM/YYYY'),
     TO_DATE(NULLIF(TRIM(REPLACE(data_pagamento, '-', '/')), ''), 'DD/MM/YYYY')
 FROM
-    raw.faturas;
+    raw.transacao;
 
 DO $$
 BEGIN
-  RAISE NOTICE 'Dados transformados e inseridos em context.transacoes_limpas.';
+  RAISE NOTICE 'Dados transformados e inseridos em context.transacoes.';
 END
 $$;
 
@@ -71,15 +71,15 @@ DO $$ BEGIN RAISE NOTICE 'Tabelas da camada APP (Gold) limpas.'; END $$;
 
 -- Carga da Dimensão Categoria
 INSERT INTO app.categoria (categoria)
-SELECT DISTINCT categoria FROM context.transacoes_limpas WHERE categoria IS NOT NULL;
+SELECT DISTINCT categoria FROM context.transacoes WHERE categoria IS NOT NULL;
 
 -- Carga da Dimensão Emitente
-INSERT INTO app.emitente (emitente_original)
-SELECT DISTINCT emitente_original FROM context.transacoes_limpas WHERE emitente_original IS NOT NULL;
+INSERT INTO app.emitente (emitente)
+SELECT DISTINCT emitente FROM context.transacoes WHERE emitente IS NOT NULL;
 
 -- Carga da Dimensão Documento
 INSERT INTO app.documento (documento_original, documento_tratado, qualidade_documento)
-SELECT DISTINCT documento_original, documento_tratado, qualidade_documento FROM context.transacoes_limpas;
+SELECT DISTINCT documento_original, documento_tratado, qualidade_documento FROM context.transacoes;
 
 -- Carga da Tabela Fato Transacao
 INSERT INTO app.transacao (
@@ -105,8 +105,8 @@ SELECT
     t.valor,
     t.data_compra,
     t.data_pagamento
-FROM context.transacoes_limpas t
-LEFT JOIN app.emitente e ON t.emitente_original = e.emitente_original
+FROM context.transacoes t
+LEFT JOIN app.emitente e ON t.emitente = e.emitente
 LEFT JOIN app.documento d ON t.documento_original = d.documento_original AND t.documento_tratado = d.documento_tratado AND t.qualidade_documento = d.qualidade_documento
 LEFT JOIN app.categoria c ON t.categoria = c.categoria;
 
