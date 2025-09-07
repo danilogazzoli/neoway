@@ -4,7 +4,7 @@ from .models import Arquivo
 class ArquivoUploadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Arquivo
-        fields = ['id', 'nome_arquivo', 'status']
+        fields = ['id', 'nome_arquivo']
 
 class ArquivoStatusSerializer(serializers.ModelSerializer):
     tempo_processamento = serializers.DurationField(read_only=True)
