@@ -7,8 +7,6 @@ RUN apk add --no-cache gcc musl-dev postgresql-dev
 
 COPY entrypoint.sh /entrypoint.sh
 COPY requirements.txt /app/requirements.txt
-COPY src/ /app/src/
-COPY data/ /app/data/
 
 # Forçar quebras de linha no formato Unix (LF) e não Windows (CRLF)
 RUN sed -i 's/\r$//' /entrypoint.sh
