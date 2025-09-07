@@ -7,7 +7,10 @@ API desenvolvida em Django para ingestão e processamento de dados via um pipeli
 - **Upload de Arquivos**: Endpoint para receber arquivos de dados (`.txt`).
 - **Processamento Assíncrono**: O pipeline de ETL é executado em uma thread separada, permitindo que a API responda imediatamente.
 - **Monitoramento de Status**: Endpoint para consultar o status de um processamento em andamento (`PENDENTE`, `PROCESSANDO`, `CONCLUIDO`, `ERRO`).
+<<<<<<< HEAD
 - **Pipeline Design Pattern**: A lógica de ETL é estruturada como uma sequência de passos modulares e reutilizáveis, facilitando a manutenção e extensibilidade.
+=======
+>>>>>>> f044697a27d390ecd498b2f8c92eddc2f1210a05
 - **Arquitetura Medallion**: Os dados são processados através das camadas `raw` (Bronze), `context` (Silver) e `app` (Gold) no banco de dados.
 - **Higienização de Dados**: Aplica tratamentos para remover acentos e padronizar para caixa alta na camada final.
 - **Documentação Interativa**: A API é autodocumentada usando Swagger e ReDoc.
