@@ -7,7 +7,6 @@ import threading
 from .models import Arquivo
 from .serializers import ArquivoUploadSerializer, ArquivoStatusSerializer
 from .tasks import process_file_task
-# Imports para o Swagger
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
@@ -50,7 +49,7 @@ class FileUploadView(APIView):
 class FileStatusView(APIView):
     @swagger_auto_schema(
         operation_summary="Consulta de status do processamento",
-        operation_description="Verifica o status de um arquivo em processamento a partir do seu ID.",
+        operation_description="Verifica o status de um arquivo em processamento a partir do ID do arquivo.",
         manual_parameters=[
             openapi.Parameter('arquivo_id', openapi.IN_PATH, description="ID do arquivo retornado no upload.", type=openapi.TYPE_INTEGER, required=True)
         ],
