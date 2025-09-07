@@ -6,10 +6,11 @@ CREATE EXTENSION IF NOT EXISTS unaccent;
 CREATE SCHEMA IF NOT EXISTS raw;
 CREATE SCHEMA IF NOT EXISTS context;
 CREATE SCHEMA IF NOT EXISTS app;
+CREATE SCHEMA IF NOT EXISTS rst;
 
 DO $$
 BEGIN
-  RAISE NOTICE 'Schemas raw, context e app criados (se não existiam).';
+  RAISE NOTICE 'Schemas raw, context, app e rst criados';
 END
 $$;
 

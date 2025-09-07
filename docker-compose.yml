@@ -1,7 +1,9 @@
 services:
   db:
     image: postgres
+    container_name: db
     volumes:
+      - ./scripts/01-schemas.sql:/docker-entrypoint-initdb.d/01-schemas.sql
       - pg_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
@@ -15,12 +17,14 @@ services:
       timeout: 5s
       retries: 5
 
-  service:
+  web:
     build: .
-    container_name: app_service
-    command: /app/entrypoint.sh
+    container_name: web_service
+    command: /app/web_entrypoint.sh
     volumes:
       - .:/app
+    ports:
+      - "8000:8000"
     env_file:
       - ./.env
     networks:
@@ -28,6 +32,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
 
 volumes:
   pg_data: {}
