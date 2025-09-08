@@ -42,11 +42,12 @@ jobs:
 
       - name: Run tests
         env:
-          DB_HOST: localhost 
-          DB_NAME: test_db
-          DB_USER: postgres
-          DB_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          DB_PORT: 5432
+          POSTGRES_HOST: localhost
+          POSTGRES_DB: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_PORT: 5432
+          DJANGO_DEBUG: True
           DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
           PYTHONUTF8: 1
           DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
