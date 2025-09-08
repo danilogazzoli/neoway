@@ -3,4 +3,7 @@ djangorestframework
 psycopg2-binary
 python-dotenv
 django-environ
-drf-yasg
+drf_yasg
+pytest
+pytest-django
+pytest-mock
