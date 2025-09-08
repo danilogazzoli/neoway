@@ -30,7 +30,11 @@ A camada final (`app`) é modelada seguindo um esquema estrela para otimizar con
 - Docker
 - Docker Compose
 
-## Instalação e Execução
+## Desenvolvimento
+
+### Instalação e Execução
+
+Siga os passos abaixo para configurar e executar o ambiente de desenvolvimento localmente.
 
 1.  **Clone o repositório:**
     ```sh
@@ -55,6 +59,16 @@ A camada final (`app`) é modelada seguindo um esquema estrela para otimizar con
     docker-compose up --build
     ```
     O servidor da API estará disponível em `http://localhost:8000`.
+
+### Testes
+
+O projeto possui uma suíte de testes automatizados utilizando `pytest` e `pytest-django` para garantir a qualidade e a estabilidade do código. A pasta `pipeline/tests` contém todos os arquivos de teste, que cobrem a lógica do pipeline de ETL, os serializers e as views da API.
+
+Para executar os testes localmente, certifique-se de que as dependências de desenvolvimento estão instaladas e execute o seguinte comando na raiz do projeto:
+
+```sh
+pytest
+```
 
 ## Como Usar a API
 
@@ -113,3 +127,14 @@ A API pode ser explorada e testada diretamente pelo navegador através das segui
 
 - **Swagger UI**: `http://localhost:8000/swagger/`
 - **ReDoc**: `http://localhost:8000/redoc/`
+
+## Integração Contínua (CI) 
+
+GitHub Actions foram utilizadas para a Integração Contínua. O workflow, definido no arquivo .github/workflows/django-ci.yml, é acionado a cada push ou pull request para a branch main.
+O pipeline de CI realiza as seguintes etapas: 
+* Configura o ambiente com Python e um banco de dados PostgreSQL de serviço. 
+* Instala todas as dependências do projeto a partir do requirements.txt. 
+* Executa a suíte de testes completa com pytest. 
+
+Isso garante que todas as alterações sejam validadas automaticamente, mantendo a integridade da base de código.
+
